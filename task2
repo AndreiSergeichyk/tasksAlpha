@@ -1,0 +1,28 @@
+CREATE SCHEMA employee_storage;
+
+SET SEARCH_PATH TO employee_storage;
+
+CREATE TABLE employee (
+  id            SERIAL PRIMARY KEY,
+  department_id INTEGER,
+  chief_id      INTEGER REFERENCES employee (id),
+  name          CHARACTER VARYING(64),
+  position      CHARACTER VARYING(64),
+  salary        NUMERIC
+);
+
+SELECT DISTINCT
+  e.name,
+  e.position
+FROM employee e
+WHERE e.department_id = 1;
+
+SELECT e2.name
+FROM employee e2 INNER JOIN (SELECT
+                               e.department_id,
+                               avg(e.salary) as avg_salary
+                             FROM employee e
+                             GROUP BY department_id, chief_id
+                             HAVING e.chief_id NOTNULL) e1 ON
+                                                             e2.department_id = e1.department_id
+WHERE e2.chief_id ISNULL AND e2.salary > e1.avg_salary * 2;
